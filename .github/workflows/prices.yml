@@ -1,53 +1,36 @@
-data/raw.json
-data/prices.json
-public/
-__pycache__/
-
-{
-  "rules": {
-    ".read": false,
-    ".write": false,
-    "lists": {
-      "$code": {
-        ".read": "$code.matches(/^[a-z2-9]{12}$/)",
-        ".write": "$code.matches(/^[a-z2-9]{12}$/)",
-        "rec": { ".validate": "newData.isString() && newData.val().length < 400000" },
-        "updated": { ".validate": "newData.isNumber()" },
-        "v": { ".validate": "newData.isNumber()" },
-        "checked": { "$k": { ".validate": "newData.val() === true" } },
-        "$other": { ".validate": false }
-      }
-    }
-  }
-}
-
-# Pazar data
-
-Every night a GitHub Action downloads the published price lists of 15 Macedonian supermarket chains,
-recognises the products, matches the same product across chains and publishes `prices.json` on GitHub Pages.
-The Pazar app downloads that file once a day.
-
-* `pipeline/fetch.py` — one small downloader per chain, plus product photos from Ramstore's online shop
-* `pipeline/run.py` — recognise, group, attach photos and write `data/prices.json` (`python pipeline/run.py --offline` rebuilds from the saved lists)
-* `pipeline/embed.py` — puts the newest `data/prices.json` into the app file as its built-in prices
-* `data/photos.json`, `data/wiki_photos.json` — saved photo lists (shop photos; free Wikimedia Commons photos for fruit and vegetables)
-* `site/index.html` — the page a shared-list link opens; it hands the code to the app
-* `firebase-rules.json` — rules for the shared-list database
-* If a chain's site is down, yesterday's list for that chain is kept; the report in `prices.json` says which.
-
-## Switching it on (one time)
-
-**Daily prices (GitHub, free)**
-1. Create a GitHub account if you don't have one, then a new **public** repository named `pazar-data`.
-2. Upload everything in this folder to it (Add file → Upload files; keep the folders).
-3. Settings → Pages → Source: **GitHub Actions**.
-4. Actions → *Daily prices* → **Run workflow**. After about 10 minutes the prices are at
-   `https://<your-user>.github.io/pazar-data/prices.json`, and they refresh every night.
-
-**Shared lists (Firebase, free)**
-1. Go to console.firebase.google.com → Add project (name: `pazar`, Analytics off).
-2. Build → Realtime Database → Create database → location *europe-west1* → Start in **locked mode**.
-3. Rules tab → paste `firebase-rules.json` → Publish.
-4. Copy the database address shown at the top (like `https://pazar-xxxx-default-rtdb.europe-west1.firebasedatabase.app`).
-
-Send both addresses (your GitHub user name and the database address) and they go into the app.
+name: Daily prices
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency: { group: pages, cancel-in-progress: false }
+jobs:
+  prices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: { name: github-pages, url: "${{ steps.deploy.outputs.page_url }}" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests==2.32.3 pdfplumber==0.11.4
+      - name: Yesterday's lists (used when a chain's site is down)
+        run: |
+          mkdir -p data
+          curl -sfL "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/raw.json.gz" | gunzip > data/raw.json || rm -f data/raw.json
+      - name: Download and match prices
+        run: python pipeline/run.py
+      - name: Prepare the website
+        run: |
+          mkdir -p public
+          cp site/* public/
+          cp data/prices.json public/prices.json
+          gzip -9 -c data/raw.json > public/raw.json.gz
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: public }
+      - id: deploy
+        uses: actions/deploy-pages@v4
