@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="mk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pazar — заедничка листа</title>
+<style>
+:root{--bg:#F2F2F7;--card:#fff;--ink:#000;--muted:#6E6E73;--brand:#007AFF}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--card:#1C1C1E;--ink:#fff;--muted:#98989D;--brand:#0A84FF}}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;display:grid;place-items:center;min-height:100vh;padding:16px;box-sizing:border-box}
+.c{background:var(--card);border-radius:22px;padding:28px 22px;max-width:420px;width:100%;text-align:center;box-sizing:border-box}
+h1{font-size:24px;margin:12px 0 6px}p{color:var(--muted);margin:6px 0 18px}
+.code{font:700 28px ui-monospace,Menlo,monospace;letter-spacing:.06em;background:var(--bg);border-radius:14px;padding:14px;margin:6px 0 18px}
+a.b{display:block;background:var(--brand);color:#fff;text-decoration:none;font-weight:700;border-radius:14px;padding:16px;margin-top:8px}
+small{color:var(--muted);display:block;margin-top:16px}
+</style></head><body><div class="c">
+<svg width="72" height="72" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5CD574"/><stop offset="1" stop-color="#20A94C"/></linearGradient></defs><rect width="100" height="100" rx="22.5" fill="url(#g)"/><g fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 43h60l-6.5 29.5a6 6 0 0 1-5.9 4.5H32.4a6 6 0 0 1-5.9-4.5z"/><path d="M37 43l9-18M63 43l-9-18"/><path d="M42 55v10M58 55v10"/></g></svg>
+<h1 id="t">Заедничка листа во Pazar</h1>
+<p id="s">Отворете ја во апликацијата. Ако не се отвори сама, внесете го кодот во Pazar → Планови → Приклучи се.</p>
+<div class="code" id="code">—</div>
+<a class="b" id="open" href="#">Отвори во Pazar</a>
+<small>Pazar · листа за пазарување и споредба на цени</small>
+</div>
+<script>
+const raw=(location.hash||"").slice(1).toLowerCase().replace(/[^a-z0-9]/g,"");
+const code=raw.replace(/(.{4})(?=.)/g,"$1-");
+document.getElementById("code").textContent=code||"—";
+const intent=`intent://list/${raw}#Intent;scheme=pazar;package=mk.pazar.app;end`;
+document.getElementById("open").href=/android/i.test(navigator.userAgent)?intent:`pazar://list/${raw}`;
+if(raw&&/android/i.test(navigator.userAgent)) setTimeout(()=>{ location.href=intent; },300);
+</script></body></html>
