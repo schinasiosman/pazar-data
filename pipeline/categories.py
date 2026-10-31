@@ -49,14 +49,14 @@ def cat_groups(cat_text):
 
 GROUP_TYPES = {
     "produce": "apples bananas oranges mandarins lemons limes grapes pears peaches strawberries watermelon kiwi plums mango avocado tomatoes cucumbers peppers hotPeppers potatoes sweetPotato onions springOnion garlic ginger carrots cabbage lettuce zucchini eggplant spinach broccoli cauliflower mushrooms celery leek beetroot pumpkin parsley dill freshHerbs",
-    "meat": "wholeChicken chickenBreast chickenThighs chickenWings mince beefMince porkNeck porkChops beefStew steak lamb",
-    "deli": "sausages sujuk ham bacon salami chickenHam pastrami",
+    "meat": "wholeChicken chickenBreast chickenThighs chickenWings mince beefMince porkNeck porkChops beefStew steak lamb chickenLiver",
+    "deli": "sausages sujuk ham bacon salami chickenHam pastrami kebapi chickenNuggets",
     "fish": "trout salmon seaBream tuna sardines hake fishSticks shrimp squid",
     "dairy": "milk yogurt kefir ayran sourCream cream kajmak butter margarine",
     "cheese": "whiteCheese kashkaval mozzarella parmesan cottageCheese creamCheese",
     "eggs": "eggs",
     "bread": "whiteBread wholeBread toastBread rolls pitaBread tortillas",
-    "pastry": "burek croissant filo",
+    "pastry": "burek croissant filo pizza frozenPastry",
     "baking": "flour cornmeal sugar salt yeast bakingPowder vanillaSugar cocoa puddingMix",
     "grains": "rice pasta noodles riceNoodles bulgur couscous oats cornflakes muesli breadcrumbs",
     "oil": "oil oliveOil vinegar",
@@ -66,7 +66,7 @@ GROUP_TYPES = {
     "snacks": "crisps flips sticks popcorn walnuts almonds peanuts raisins dates",
     "sweets": "chocoSpread chocolate biscuits wafers cakes candy gum halva croissant puddingMix",
     "iceCream": "iceCream",
-    "frozen": "peas mixedVeg frozenSpinach hake fishSticks shrimp squid fries pizza iceCream burek wholeChicken chickenBreast chickenThighs chickenWings mince beefMince",
+    "frozen": "peas mixedVeg frozenSpinach hake fishSticks shrimp squid fries pizza iceCream burek wholeChicken chickenBreast chickenThighs chickenWings mince beefMince greenBeans frozenFruit chickenNuggets kebapi frozenPastry corn chickenLiver frozenBroccoli",
     "coffeeTea": "coffee instantCoffee tea cocoa icedTea",
     "water": "water sparklingWater mineral",
     "soft": "cola orangeSoda lemonSoda tonic orangeJuice appleJuice fruitJuice icedTea energy",
@@ -80,6 +80,9 @@ GROUP_TYPES = {
 TYPE_GROUPS = {}
 for grp, ts in GROUP_TYPES.items():
     for t in ts.split(): TYPE_GROUPS.setdefault(t, set()).add(grp)
+# meat products sold on the meat shelf, which are not fresh meat (so not in the 'meat' group's fresh-meat checks)
+for t in ("kebapi", "chickenNuggets"): TYPE_GROUPS.setdefault(t, set()).add("meat")
+TYPE_GROUPS.setdefault("greenBeans", set()).add("produce")   # fresh green beans too, without the fresh-produce checks
 
 def fits(g, cat_text):
     """Does product type g fit the chain's shelf category? Unknown shelves are accepted."""
