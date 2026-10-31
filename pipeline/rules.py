@@ -109,6 +109,7 @@ R=[
  ("mustard", r'\bsenf\b|\bsenf|\bmustard|\bslacica|\bsenef', None),
  ("ajvar", r'\bajvar\b|\bajvar\b|\blutenica|\bpindzur|\bpindjur', None),
  ("pickles", r'\bkorniso|\bkornison|\bkiseli krastav|\bkrastavici vo ocet|\bkornisoni|\bkrastavic(?!a).*tegl|\bturs[ij]|\bmesana salata|\bfeferon|\bkapija pecena|\bpecena piperka|\bcvekl.*tegl|\bcvekl.*\d{3} ?g', r'cips|grick|sos'),
+ ("pickledVeg", r'feferon|halapen|jalapen|(piperk|krastav|pecurk|cvekl)\w*\b.*\d+ ?ml\b|\bturs|\bkisel[aie]? (piperk|krastav|zelk|cvekl|domat)|marinir.*(piperk|krastav|zelencuk|gljiv|pecurk)|(piperk|piperki)\b.*(filet|barena|marinir|vlozen|tegla|dojpak|doypack|vo ocet)|barena piperk|cepkana piperk|\bpindzur|\blutenic|zimnic|(pecurk|gljiv).*(tegl|marinir|vlozen|konzerv)|susen[ia]? domat|domati? susen|suvi domat|\bkapari|artichok|artichoc', r'cips|grick|sos za|ajvar|zacin'),
  ("sourCabbage", r'kisela zelk|kiseli kupus|\bkiseo kupus|\bzelka kisela|\bsauerkraut|\bkupus kiseo|\bglavic.*kisel', None),
  ("vineLeaves", r'lozov[ia] list|vinov[ai] list|\bjaprak|\bvine leaves|\bsarma od loz', None),
  ("olives", r'\bmaslink|\bmaslini|\bolive\b|\bolives\b|\bkalamata|\bullinj', r'maslo|ulje|oil|sapun|krema'),
@@ -158,7 +159,7 @@ R=[
  ("gum", r'\bmastika za zvak|\bzvakalic|\bzvakac|\borbit\b|\bdzvak|\bairwaves|\bhubba bubba|\bgum\b|\bdirol|\bmastika orbit|\bmentos gum|\btrident', None),
  ("iceCream", r'\bsladoled|\bice ?cream|\bmagnum\b|\bkornet|\bcornetto|\bkornetto|\bfrikom.*(kup|kesa|stapc)|\bpolar\b|\bmovenpick|\bakullore', r'puding|prasok|kalap|modla|caša|mesin|aparat|lazic'),
  ("pizza", r'\bpica\b|\bpizza\b', r'sos|zacin|kecap|sirenje za|testo za|brasno|kalap|tava|modla|cips|grick|stapc|smoki|krekeri|gric'),
- ("fries", r'\bpomfrit|\bpomfri|\bfrench fries|\bkrompir pomfrit|\bkompir pomfrit|\bmccain|\bkroketi\b|\bkompir smrz|\bkrompir smrz|\bfrozen fries', r'zacin|sos|kecap'),
+ ("fries", r'\bmekejn|wedges|vedzis|golden long|\bpomfrit|\bpomfri|\bfrench fries|\bkrompir pomfrit|\bkompir pomfrit|\bmccain|\bkroketi\b|\bkompir smrz|\bkrompir smrz|\bfrozen fries', r'zacin|sos|kecap'),
  ("frozenSpinach", r'(spanac|spanak|spinat).*(smrz|zamrz|ledo|frikom)|(ledo|frikom).*(spanac|spanak)', None),
  ("mixedVeg", r'\bmesan zelencuk|\bzelencukov mix|\bzelencukova mes|\bmesavina zelenc|\bzelencuk mes|\bmeksikanska mesav|\bsvinska mesavin|\bkinesk[ai] mesavin|\bfrancusk[ai] salat|\bruska salata zelenc|\bzelencuk za supa|\bzamrznat zelencuk|\bmix zelencuk', None),
  # --- produce (fresh, mostly no brand) ---

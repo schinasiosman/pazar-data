@@ -30,20 +30,27 @@ EXTRA_X={k:re.compile(v) for k,v in {
  'onions':r'aviko|krugovi|fritoso|pohovan',
 }.items()}
 DRINKS={'energy','icedTea','beer','redWine','whiteWine','roseWine','rakija','whisky','vodka','gin','liqueur','tonic','cola','orangeSoda','lemonSoda','mineral','sparklingWater','water','orangeJuice','appleJuice','fruitJuice','milk','ayran','kefir'}
-def classify(name):
-    n=norm(name)
+from categories import fits, NOT_FRESH_PRODUCE, NOT_FRESH_MEAT, GROUP_TYPES
+_PRODUCE_T=set(GROUP_TYPES["produce"].split()); _MEAT_T=set(GROUP_TYPES["meat"].split())
+def classify(name, cat=None):
+    """Product type of a price-list row. A type is only given when the name fits it AND the chain's shelf category fits it;
+    otherwise the next rule is tried (so 'chicken slices' falls through to cold cuts, 'chicken' cat food to pet food)."""
+    n=norm(name); c=norm(str(cat or ""))
     for g,inc,exc in RC:
         if inc.search(n) and not (exc and exc.search(n)):
+            if not fits(g, c): continue
+            if g in _PRODUCE_T and NOT_FRESH_PRODUCE.search(n): continue
+            if g in _MEAT_T and NOT_FRESH_MEAT.search(n): continue
             if g not in NONFOOD_FIRST:
                 if XN.search(n) or FOODX.search(n): return None,n
                 if g in PRODUCE:
-                    if PROCESSED.search(n) or len(n.split())>5: return None,n
+                    if PROCESSED.search(n) or len(n.split())>5: continue
                     s=size(n)
-                    if s and (s[1]=='ml' or (s[1]=='g' and s[0]<150)): return None,n
-                if g in PANTRY_CAP and len(n.split())>8: return None,n
-                if g in EXTRA_X and EXTRA_X[g].search(n): return None,n
+                    if s and (s[1]=='ml' or (s[1]=='g' and s[0]<150)): continue
+                if g in PANTRY_CAP and len(n.split())>8: continue
+                if g in EXTRA_X and EXTRA_X[g].search(n): continue
                 if g in DRINKS:
                     s=size(n)
-                    if not s or s[1]!='ml': return None,n
+                    if not s or s[1]!='ml': continue
             return g,n
     return None,n

@@ -48,6 +48,17 @@ def rows_of(page):
 
 # ---- Kipper: WordPress DataTable endpoint, one store
 def kipper():
+    # Kipper's site refuses plain scripts; look like the browser page that loads the table
+    h = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+         "Accept": "application/json, text/javascript, */*; q=0.01", "X-Requested-With": "XMLHttpRequest",
+         "Origin": "https://kipper.mk", "Referer": "https://kipper.mk/", "Accept-Language": "mk,en;q=0.8"}
+    try: S.get("https://kipper.mk/", headers=h, timeout=TIMEOUT)
+    except Exception: pass
+    r = S.post("https://kipper.mk/wp-admin/admin-ajax.php", data={"action": "get_products_data", "post_id": "22662", "draw": "1", "start": "0", "length": "10000"}, headers=h, timeout=TIMEOUT)
+    r.raise_for_status(); j = r.json()
+    return [[x["product_name"], num(x["product_price"]), x.get("product_subgroup") or "", num(x.get("product_price_normal")) or num(x["product_price"]), x.get("product_name_alt") or ""] for x in j["data"]]
+
+def _kipper_old():
     j = post("https://kipper.mk/wp-admin/admin-ajax.php", {"action": "get_products_data", "post_id": "22662", "draw": "1", "start": "0", "length": "10000"}).json()
     return [[x["product_name"], num(x["product_price"]), x.get("product_subgroup") or "", num(x.get("product_price_normal")) or num(x["product_price"]), x.get("product_name_alt") or ""] for x in j["data"]]
 

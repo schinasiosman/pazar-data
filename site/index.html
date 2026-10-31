@@ -19,10 +19,13 @@ small{color:var(--muted);display:block;margin-top:16px}
 <small>Pazar · листа за пазарување и споредба на цени</small>
 </div>
 <script>
-const raw=(location.hash||"").slice(1).toLowerCase().replace(/[^a-z0-9]/g,"");
+const H=(location.hash||"").slice(1), isDish=H.startsWith("d=");
+if(isDish){ document.getElementById("t").textContent="Рецепт во Pazar"; document.getElementById("s").textContent="Отворете го во апликацијата за да го додадете во вашите јадења."; document.getElementById("code").style.display="none"; }
+const raw=isDish?"":H.toLowerCase().replace(/[^a-z0-9]/g,"");
 const code=raw.replace(/(.{4})(?=.)/g,"$1-");
 document.getElementById("code").textContent=code||"—";
-const intent=`intent://list/${raw}#Intent;scheme=pazar;package=mk.pazar.app;end`;
-document.getElementById("open").href=/android/i.test(navigator.userAgent)?intent:`pazar://list/${raw}`;
-if(raw&&/android/i.test(navigator.userAgent)) setTimeout(()=>{ location.href=intent; },300);
+const path=isDish?`dish/${H.slice(2)}`:`list/${raw}`;
+const intent=`intent://${path}#Intent;scheme=pazar;package=mk.pazar.app;end`;
+document.getElementById("open").href=/android/i.test(navigator.userAgent)?intent:`pazar://${path}`;
+if((raw||isDish)&&/android/i.test(navigator.userAgent)) setTimeout(()=>{ location.href=intent; },300);
 </script></body></html>
