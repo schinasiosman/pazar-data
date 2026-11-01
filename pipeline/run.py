@@ -19,10 +19,15 @@ PCS_OK = ('eggs','toiletPaper','kitchenRoll','napkins','diapers','babyWipes','pa
 BR = [(i, re.compile(r)) for i, _, _, r in B]
 BN = {i: (l, c) for i, l, c, _ in B}
 
-def brand_of(n):
+def brand_of(n, g=None):
     for i, rx in BR:
-        if rx.search(n): return i
+        if rx.search(n):
+            # a food company's name in a shampoo or a cleaner is a product name (Colgate "Max", "Bon Bons" deo), not that company
+            if g and g in NONFOOD_T and i in FOOD_ONLY: continue
+            return i
     return ''
+FOOD_ONLY = {'maks', 'bon', 'absolut', 'imlek', 'garden', 'bravo', 'kim', 'zito', 'podravka', 'swisslion', 'bambi', 'stobi', 'vitaminka', 'pekabesko', 'jaffa', 'olimpus', 'bitolsko', 'herba', 'hepi'}
+NONFOOD_T = {'laundry','softener','dishSoap','dishTabs','cleaner','bleach','toiletPaper','kitchenRoll','napkins','binBags','sponges','foil','shampoo','conditioner','showerGel','soap','toothpaste','toothbrush','deodorant','razors','pads','handCream','diapers','babyWipes','catFood','dogFood'}
 
 def nice(t):
     t = re.sub(r'[`~^{}\[\]|@?]+', '', str(t)); t = re.sub(r'\s+', ' ', t).strip(' .-/')
@@ -56,7 +61,7 @@ def build(raw):
             if s[1] == 'pcs' and g not in PCS_OK:
                 if g in FRESHISH: s = (1000.0, 'g', 1); w = 1
                 else: continue
-            b = brand_of(n)
+            b = brand_of(n, g)
             if g in FRESH_TYPES and b not in FRESH_BRANDS: b = ''           # tomatoes, onions, fresh meat: no fake brands
             fat = ''
             if g in FAT:

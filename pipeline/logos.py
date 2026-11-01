@@ -148,20 +148,48 @@ def to_png(url, size=256):
     can.paste(im, ((side - w) // 2, (side - h) // 2)); can = can.resize((size, size), Image.LANCZOS)
     return can
 
-def collect(brand_ids, out_dir, keep_days=7):
+# ---- Only logos that were checked by eye are used: a wrong logo is worse than the company's initials. ----
+# Website icons that were checked (the company's own site icon, through Google's icon service)
+FAV_DOMAIN = {"podravka":"podravka.com","imlek":"imlek.rs","milka":"milka.com","vitaminka":"vitaminka.com.mk","megle":"meggle.com","kim":"kim.com.mk","bambi":"bambi.rs","stark":"stark.rs",
+ "violeta":"violeta.com","swisslion":"swisslion-takovo.com","maks":"maks.com.mk","perutnina":"perutnina.com","dauti":"dauti.com.mk","rosen":"roshen.com","nestle":"nestle.com","hipp":"hipp.com",
+ "drOetker":"oetker.com","frank":"franck.eu","olimpus":"olympus.gr","evropa":"evropa.com.mk","alkaloid":"alkaloid.com.mk","sinalko":"sinalco.com","zott":"zott.de","tikves":"tikves.com.mk",
+ "alpojo":"alpojo.com.mk","grand":"grandkafa.com","lindt":"lindt.com","nivea":"nivea.com","divela":"divella.it","magnum":"magnumicecream.com","sutas":"sutas.com.tr","heinz":"heinz.com",
+ "snickers":"snickers.com","bonduelle":"bonduelle.com","kitkat":"kitkat.com","zdenka":"zdenka.hr","sonceva":"soncevadolina.mk","somat":"somat.de","pedigree":"pedigree.com","dove":"dove.com",
+ "libresse":"libresse.com","haribo":"haribo.com","jager":"jagermeister.com","colgate":"colgate.com","imako":"imakovino.com","badel":"badel1862.hr","palmolive":"palmolive.com","algida":"algida.com",
+ "tiamo":"tiamo.mk","gorska":"gorska.com.mk","gillette":"gillette.com","doritos":"doritos.com","hell":"hellenergy.com","riomare":"riomare.it","calvo":"calvo.es","pfanner":"pfanner.com",
+ "pelisterka":"pelisterka.com.mk","finish":"finishdishwashing.com","izvorska":"izvorska.mk","barilla":"barilla.com","cedevita":"cedevita.com","vileda":"vileda.com","garnier":"garnier.com",
+ "borotalco":"borotalco.com","tictac":"tictac.com","monini":"monini.com","pepsi":"pepsi.com","smirnoff":"smirnoff.com","cif":"cif.co.uk","headshoulders":"headandshoulders.com","bebivita":"bebivita.de",
+ "zitopolog":"zitopolog.com.mk","algomak":"algomak.mk","delamaris":"delamaris.si","hellmanns":"hellmanns.com","teekanne":"teekanne.com","heba":"heba.rs","johnnie":"johnniewalker.com",
+ "absolut":"absolut.com","zewa":"zewa.com","oralb":"oralb.com","gavrilovic":"gavrilovic.hr","seara":"seara.com.br","bifruit":"bifruit.mk","wilkinson":"wilkinsonsword.com","pringles":"pringles.com",
+ "redbull":"redbull.com","monster":"monsterenergy.com","guarana":"guarana.rs","amstel":"amstel.com","popov":"popovakula.com.mk","jackdaniels":"jackdaniels.com","galbani":"galbani.it",
+ "uncleBens":"bensoriginal.com","lavazza":"lavazza.com","huggies":"huggies.com"}
+# Logo files on Wikimedia Commons that were checked (filled from Wikidata's "logo image")
+WD_FILE = {"podravka": "Podravka logo 2024.svg", "milka": "Milka purple logo18.svg", "swisslion": "Swisslion Takovo logo.jpg", "perutnina": "Perutnina Ptuj Logo.svg", "nescafe": "Nescafé logo 2014.svg", "persil": "Persil Logo.svg", "rosen": "Roshen.svg", "nestle": "Nestlé textlogo.svg", "kinder": "Kinder (Wortmarke) logo.svg", "drOetker": "Dr. Oetker-Logo.svg", "nutella": "Logo Nutella.svg", "sinalko": "Sinalco logo.svg", "kotanyi": "Kotanyi-logo-color.svg", "lindt": "Lindt sprungli textlogo.png", "nivea": "Nivea logo.svg", "magnum": "Magnum logo.svg", "snickers": "Snickers 2025.svg", "bonduelle": "Bonduelle - logo (France, 1990-1995).svg", "pantene": "Pantene.svg", "haribo": "Haribo Logo 2024.svg", "jager": "Jägermeister-Logo.tif", "palmolive": "Palmolive logo 2019.png", "algida": "Algida.svg", "gillette": "Gillette.svg", "domestos": "Domestos logo.png", "cocacola": "The Coca-Cola Company logo.svg", "barilla": "Barilla logo.svg", "cedevita": "Cedevita.png", "vileda": "Vileda Logo 2024.svg", "garnier": "Garnier wordmark.svg", "borotalco": "Borotalco logo.svg", "tictac": "Tic Tac logo 2022-present.png", "sprite": "Sprite 2026.svg", "schweppes": "Schweppes wordmark.svg", "mirinda": "Mirinda logo.svg", "heineken": "Heineken Logo.svg", "headshoulders": "Head&shoulders-Logo.svg", "hellmanns": "Hellmanns logo 1.jpg", "lipton": "Lipton logo (2014-2026).svg", "johnnie": "Johnnie Walker wordmark.svg", "absolut": "Absolut Vodka logo.svg", "oralb": "Oral-B logo.svg", "rexona": "Rexona.gif", "riso": "Logo Riso Scotti S.p.a..jpg", "fuzetea": "Fuze-tea-logo.svg", "wilkinson": "Wilkinson Sword text only.png", "kikkoman": "KIKKOMAN old logo.png", "mccain": "McCain-Logo.svg", "pringles": "Pringles logo.png", "redbull": "Logo of Red bull.svg", "amstel": "Amstel coaster.jpg", "galbani": "LogoGalbani-06122021.png", "uncleBens": "BensOriginalLogo.svg", "kras": "Kras-zagreb-logo.svg", "pampers": "Pampers logo.svg", "hipp": "HIPP-Logo.svg", "zott": "Zott-Logo.svg"}
+# Company websites whose logo came out right in a checked run
+SITE_OK = {"bako","bekutan","dijamant","domestos","evropa","gorska","grand","guarana","gurmano","haribo","headshoulders","heba","hell","imlek","izvorska","jacobs","kim","kinder","kras","maks","monini","neoplanta","bebivita","bonduelle","absolut"}
+FAV = lambda d: f"https://www.google.com/s2/favicons?domain={d}&sz=128"
+
+def checked_sources(b):
+    urls = []
+    if b in WD_FILE:
+        try: urls += _thumb("", [WD_FILE[b]], "commons")
+        except Exception: pass
+    if b in SITE_OK and b in SITE:
+        try: urls += site_logo(SITE[b], b) or []
+        except Exception: pass
+    if b in WIKI and b in SITE_OK:
+        try: urls += wiki_logo(WIKI[b])
+        except Exception: pass
+    if b in FAV_DOMAIN: urls.append(FAV(FAV_DOMAIN[b]))
+    return urls
+
+def collect(brand_ids, out_dir, keep_days=0):
     os.makedirs(out_dir, exist_ok=True); have, report = [], {}
     for b in brand_ids:
         path = os.path.join(out_dir, f"{b}.png")
         if os.path.exists(path) and time.time() - os.path.getmtime(path) < keep_days * 86400:
             have.append(b); continue
-        urls = []
-        try:
-            if b in WIKI:
-                urls += wiki_logo(WIKI[b])
-        except Exception as e: report[b] = f"wiki: {e}"[:120]
-        try:
-            if b in SITE: urls += site_logo(SITE[b], b) or []
-        except Exception as e: report[b] = f"site: {e}"[:120]
+        urls = checked_sources(b)
         for u in urls:
             try:
                 im = to_png(u)
