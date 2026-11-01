@@ -39,8 +39,11 @@ def fetch_osm():
                 last = e; time.sleep(10)
     raise RuntimeError(f"overpass: {last}")
 
+# Shops that the chains' own lists and OpenStreetMap don't show yet
+EXTRA = [["Spar", "SPAR Palma Mall, Tetovo", 42.00487, 20.98989]]
+
 def chain_stores(elements):
-    out, seen = [], set()
+    out, seen = [list(x) for x in EXTRA], set()
     for e in elements:
         t = e.get("tags", {})
         lat = e.get("lat") or (e.get("center") or {}).get("lat"); lng = e.get("lon") or (e.get("center") or {}).get("lon")

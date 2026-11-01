@@ -47,7 +47,7 @@ def rows_of(page):
     return [cells(tr) for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", page, re.S)]
 
 # ---- Kipper: WordPress DataTable endpoint, one store
-def kipper():
+def kipper_direct():
     # Kipper's site refuses plain scripts; look like the browser page that loads the table
     h = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
          "Accept": "application/json, text/javascript, */*; q=0.01", "X-Requested-With": "XMLHttpRequest",
@@ -57,6 +57,25 @@ def kipper():
     r = S.post("https://kipper.mk/wp-admin/admin-ajax.php", data={"action": "get_products_data", "post_id": "22662", "draw": "1", "start": "0", "length": "10000"}, headers=h, timeout=TIMEOUT)
     r.raise_for_status(); j = r.json()
     return [[x["product_name"], num(x["product_price"]), x.get("product_subgroup") or "", num(x.get("product_price_normal")) or num(x["product_price"]), x.get("product_name_alt") or ""] for x in j["data"]]
+
+FEED_DB = "https://pazar-1adf9-default-rtdb.europe-west1.firebasedatabase.app"
+def kipper():
+    """Kipper's site refuses cloud servers like the one the nightly job runs on. The Pazar app on people's phones
+    reads Kipper's price list once a day and leaves it in the shared database; that copy is used when the site refuses us."""
+    try: return kipper_direct()
+    except Exception as e: first = e
+    r = requests.get(f"{FEED_DB}/feeds/kipper.json", timeout=TIMEOUT); r.raise_for_status(); f = r.json() or {}
+    m = re.match(r"(\d{2})\.(\d{2})\.(\d{4})", str(f.get("date", "")))
+    if not m: raise RuntimeError(f"site: {first}; no copy from the app")
+    import datetime
+    age = (datetime.date.today() - datetime.date(int(m[3]), int(m[2]), int(m[1]))).days
+    if age > 3: raise RuntimeError(f"site: {first}; app copy is {age} days old")
+    if f.get("rows"): data = [{"product_name": r[0], "product_price": r[1], "product_subgroup": r[2], "product_price_normal": r[3], "product_name_alt": r[4]} for r in f["rows"]]
+    else: data = json.loads(f["raw"])["data"]
+    out = [[x["product_name"], num(x["product_price"]), x.get("product_subgroup") or "", num(x.get("product_price_normal")) or num(x["product_price"]), x.get("product_name_alt") or ""] for x in data]
+    out = [r for r in out if r[0] and r[1]]
+    if len(out) < 1000: raise RuntimeError(f"site: {first}; app copy has only {len(out)} rows")
+    return out
 
 def _kipper_old():
     j = post("https://kipper.mk/wp-admin/admin-ajax.php", {"action": "get_products_data", "post_id": "22662", "draw": "1", "start": "0", "length": "10000"}).json()
