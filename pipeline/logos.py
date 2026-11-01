@@ -11,10 +11,10 @@ UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3
 # Wikipedia and Wikimedia only answer bots that say who they are (a browser name from a server is refused)
 WM_UA = {"User-Agent": "PazarLogoBot/1.1 (https://github.com/schinasiosman/pazar-data) python-requests"}
 def wm_get(url, **kw):
-    for i in range(4):
-        r = requests.get(url, headers=WM_UA, timeout=30, **kw)
+    for i in range(2):
+        r = requests.get(url, headers=WM_UA, timeout=20, **kw)
         if r.status_code != 429 and r.status_code < 500: return r
-        time.sleep(3 * (i + 1))
+        time.sleep(2)
     return r
 
 # Wikipedia article (any language) whose infobox shows the logo
@@ -167,6 +167,7 @@ FAV_DOMAIN = {"podravka":"podravka.com","imlek":"imlek.rs","milka":"milka.com","
 WD_FILE = {"podravka": "Podravka logo 2024.svg", "milka": "Milka purple logo18.svg", "swisslion": "Swisslion Takovo logo.jpg", "perutnina": "Perutnina Ptuj Logo.svg", "nescafe": "Nescafé logo 2014.svg", "persil": "Persil Logo.svg", "rosen": "Roshen.svg", "nestle": "Nestlé textlogo.svg", "kinder": "Kinder (Wortmarke) logo.svg", "drOetker": "Dr. Oetker-Logo.svg", "nutella": "Logo Nutella.svg", "sinalko": "Sinalco logo.svg", "kotanyi": "Kotanyi-logo-color.svg", "lindt": "Lindt sprungli textlogo.png", "nivea": "Nivea logo.svg", "magnum": "Magnum logo.svg", "snickers": "Snickers 2025.svg", "bonduelle": "Bonduelle - logo (France, 1990-1995).svg", "pantene": "Pantene.svg", "haribo": "Haribo Logo 2024.svg", "jager": "Jägermeister-Logo.tif", "palmolive": "Palmolive logo 2019.png", "algida": "Algida.svg", "gillette": "Gillette.svg", "domestos": "Domestos logo.png", "cocacola": "The Coca-Cola Company logo.svg", "barilla": "Barilla logo.svg", "cedevita": "Cedevita.png", "vileda": "Vileda Logo 2024.svg", "garnier": "Garnier wordmark.svg", "borotalco": "Borotalco logo.svg", "tictac": "Tic Tac logo 2022-present.png", "sprite": "Sprite 2026.svg", "schweppes": "Schweppes wordmark.svg", "mirinda": "Mirinda logo.svg", "heineken": "Heineken Logo.svg", "headshoulders": "Head&shoulders-Logo.svg", "hellmanns": "Hellmanns logo 1.jpg", "lipton": "Lipton logo (2014-2026).svg", "johnnie": "Johnnie Walker wordmark.svg", "absolut": "Absolut Vodka logo.svg", "oralb": "Oral-B logo.svg", "rexona": "Rexona.gif", "riso": "Logo Riso Scotti S.p.a..jpg", "fuzetea": "Fuze-tea-logo.svg", "wilkinson": "Wilkinson Sword text only.png", "kikkoman": "KIKKOMAN old logo.png", "mccain": "McCain-Logo.svg", "pringles": "Pringles logo.png", "redbull": "Logo of Red bull.svg", "amstel": "Amstel coaster.jpg", "galbani": "LogoGalbani-06122021.png", "uncleBens": "BensOriginalLogo.svg", "kras": "Kras-zagreb-logo.svg", "pampers": "Pampers logo.svg", "hipp": "HIPP-Logo.svg", "zott": "Zott-Logo.svg"}
 # Company websites whose logo came out right in a checked run
 SITE_OK = {"bako","bekutan","dijamant","domestos","evropa","gorska","grand","guarana","gurmano","haribo","headshoulders","heba","hell","imlek","izvorska","jacobs","kim","kinder","kras","maks","monini","neoplanta","bebivita","bonduelle","absolut"}
+PUBLISHED = "https://schinasiosman.github.io/pazar-data/"
 FAV = lambda d: f"https://www.google.com/s2/favicons?domain={d}&sz=128"
 
 def checked_sources(b):
@@ -183,12 +184,20 @@ def checked_sources(b):
     if b in FAV_DOMAIN: urls.append(FAV(FAV_DOMAIN[b]))
     return urls
 
-def collect(brand_ids, out_dir, keep_days=0):
-    os.makedirs(out_dir, exist_ok=True); have, report = [], {}
+def collect(brand_ids, out_dir, keep_days=0, budget=600):
+    """At most `budget` seconds of searching per run: logos already published are reused at once, the rest are found a few at a time."""
+    os.makedirs(out_dir, exist_ok=True); have, report = [], {}; t0 = time.time()
     for b in brand_ids:
         path = os.path.join(out_dir, f"{b}.png")
         if os.path.exists(path) and time.time() - os.path.getmtime(path) < keep_days * 86400:
             have.append(b); continue
+        # reuse the logo published by the last run (it was already checked and cleaned): a fast download instead of a search
+        try:
+            r = requests.get(f"{PUBLISHED}logos/{b}.png", timeout=15)
+            if r.ok and r.content[:4] == b"\x89PNG" and (b in WD_FILE or b in FAV_DOMAIN or b in SITE_OK):
+                open(path, "wb").write(r.content); have.append(b); report[b] = "kept"; continue
+        except Exception: pass
+        if time.time() - t0 > budget: report[b] = "later"; continue      # out of time this run: tomorrow
         urls = checked_sources(b)
         for u in urls:
             try:

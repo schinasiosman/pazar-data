@@ -1,5 +1,5 @@
 """Daily job: download price lists -> recognise products -> group the same product across chains -> data/prices.json"""
-import json, os, re, sys, time, collections, hashlib, datetime
+import requests, json, os, re, sys, time, collections, hashlib, datetime
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from fetch import fetch_all, photos
 from classify import classify, PRODUCE
@@ -174,12 +174,22 @@ if __name__ == "__main__":
         except Exception as e: report["logos"] = ["failed", str(e)[:200]]
         try:
             os.makedirs(os.path.join(site, "img"), exist_ok=True); done = 0
-            for i, path in enumerate(img["list"]):
-                if path.startswith("http"): continue
+            # each cleaned photo is named after its source, so the next run can take it from the published site instead of redoing it
+            def clean(i, path):
+                name = "img/" + hashlib.md5(path.encode()).hexdigest()[:14] + ".jpg"; dest = os.path.join(site, name)
+                try:
+                    r = requests.get("https://schinasiosman.github.io/pazar-data/" + name, timeout=15)
+                    if r.ok and r.content[:2] == b"\xff\xd8": open(dest, "wb").write(r.content); return i, name
+                except Exception: pass
                 try:
                     im = to_png(img["base"] + path, 320)
-                    if im: im.save(os.path.join(site, "img", f"{i}.jpg"), quality=84); img["list"][i] = f"img/{i}.jpg"; done += 1
+                    if im: im.save(dest, quality=84); return i, name
                 except Exception: pass
+                return i, None
+            import concurrent.futures as cf
+            with cf.ThreadPoolExecutor(8) as ex:
+                for i, name in ex.map(lambda a: clean(*a), [(i, p) for i, p in enumerate(img["list"]) if not p.startswith("http")]):
+                    if name: img["list"][i] = name; done += 1
             img["local"] = True; report["photos_clean"] = ["ok", done]
         except Exception as e: report["photos_clean"] = ["failed", str(e)[:200]]
     sp2 = os.path.join(DATA, "stores.json"); stores = json.load(open(sp2)) if os.path.exists(sp2) else []
